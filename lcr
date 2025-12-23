@@ -3,118 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCR Dice Game</title>
+    <title>LCR Dice Roller</title>
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        .player-list { text-align: left; margin: 20px 0; }
-        .player-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; }
-        .active { background: #e7f3ff; font-weight: bold; border-radius: 8px; }
-        .dice-area { font-size: 2rem; margin: 20px; min-height: 50px; color: #007aff; }
-        .pot { font-size: 1.2rem; color: #d9534f; font-weight: bold; margin-bottom: 10px; }
-        button { background: #007aff; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 1rem; cursor: pointer; width: 100%; }
-        button:disabled { background: #ccc; }
-        #log { font-size: 0.8rem; color: #666; margin-top: 20px; height: 100px; overflow-y: auto; border-top: 1px solid #eee; padding-top: 10px; }
+        body { font-family: -apple-system, sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: #1e1e1e; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .dice-display { font-size: 3.5rem; margin: 30px 0; min-height: 80px; display: flex; justify-content: center; gap: 15px; }
+        .die { background: white; color: black; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; }
+        button { background: #007aff; color: white; border: none; padding: 15px 30px; border-radius: 12px; font-size: 1.2rem; cursor: pointer; width: 100%; transition: 0.2s; }
+        button:active { transform: scale(0.98); background: #0056b3; }
+        #history { margin-top: 30px; text-align: left; font-size: 0.9rem; color: #aaa; height: 150px; overflow-y: auto; border-top: 1px solid #333; padding-top: 10px; }
+        .label { color: #007aff; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>LCR Simulator</h2>
-    <div class="pot">Center Pot: <span id="center-pot">0</span></div>
+<div class="container">
+    <h2>LCR Dice Roller</h2>
+    <p>Tap below to roll your turn</p>
     
-    <div id="player-container" class="player-list">
-        </div>
+    <div class="dice-display" id="dice-container">
+        <div class="die">?</div>
+    </div>
+    
+    <button onclick="startRoll()">Roll Dice</button>
 
-    <div class="dice-area" id="dice-display">🎲 🎲 🎲</div>
-    
-    <button id="roll-btn" onclick="takeTurn()">Roll Dice</button>
-    
-    <div id="log">Welcome! Tap Roll to start.</div>
+    <div id="history">
+        <div class="label">Roll History:</div>
+    </div>
 </div>
 
 <script>
-    // Game State
-    let players = [
-        { name: "Alice", chips: 3 },
-        { name: "Bob", chips: 3 },
-        { name: "Charlie", chips: 3 },
-        { name: "Diana", chips: 3 }
-    ];
-    let centerPot = 0;
-    let currentIndex = 0;
-    let gameOver = false;
+    const sides = ['L', 'C', 'R', '•', '•', '•'];
 
-    function updateUI() {
-        const container = document.getElementById('player-container');
-        container.innerHTML = '';
-        
-        players.forEach((p, i) => {
-            const row = document.createElement('div');
-            row.className = `player-row ${i === currentIndex && !gameOver ? 'active' : ''}`;
-            row.innerHTML = `<span>${p.name}</span> <span>${p.chips} 🪙</span>`;
-            container.appendChild(row);
-        });
+    function startRoll() {
+        // Ask user how many dice
+        let input = prompt("How many dice do you need to roll? (1, 2, or 3)", "3");
+        let numDice = parseInt(input);
 
-        document.getElementById('center-pot').innerText = centerPot;
-    }
-
-    function log(msg) {
-        const logDiv = document.getElementById('log');
-        logDiv.innerHTML = msg + "<br>" + logDiv.innerHTML;
-    }
-
-    function takeTurn() {
-        if (gameOver) return;
-
-        let activePlayer = players[currentIndex];
-        
-        // Skip players with 0 chips
-        if (activePlayer.chips === 0) {
-            currentIndex = (currentIndex + 1) % players.length;
-            takeTurn();
+        // Validation
+        if (isNaN(numDice) || numDice < 1 || numDice > 3) {
+            alert("Please enter 1, 2, or 3.");
             return;
         }
 
-        const numDice = Math.min(activePlayer.chips, 3);
-        const sides = ['L', 'C', 'R', '•', '•', '•'];
-        let rolls = [];
-        
-        for (let i = 0; i < numDice; i++) {
-            let result = sides[Math.floor(Math.random() * sides.length)];
-            rolls.push(result);
-
-            if (result === 'L') {
-                activePlayer.chips--;
-                players[(currentIndex + 1) % players.length].chips++;
-            } else if (result === 'R') {
-                activePlayer.chips--;
-                players[(currentIndex - 1 + players.length) % players.length].chips++;
-            } else if (result === 'C') {
-                activePlayer.chips--;
-                centerPot++;
-            }
-        }
-
-        document.getElementById('dice-display').innerText = rolls.join(' ');
-        log(`${activePlayer.name} rolled: ${rolls.join(', ')}`);
-
-        // Check for winner
-        let playersWithChips = players.filter(p => p.chips > 0);
-        if (playersWithChips.length === 1) {
-            gameOver = true;
-            let winner = playersWithChips[0];
-            document.getElementById('roll-btn').disabled = true;
-            document.getElementById('dice-display').innerText = "🏆";
-            log(`<strong>GAME OVER! ${winner.name} wins!</strong>`);
-        } else {
-            currentIndex = (currentIndex + 1) % players.length;
-        }
-
-        updateUI();
+        rollDice(numDice);
     }
 
-    updateUI();
+    function rollDice(count) {
+        const container = document.getElementById('dice-container');
+        const history = document.getElementById('history');
+        container.innerHTML = '';
+        let results = [];
+
+        for (let i = 0; i < count; i++) {
+            let result = sides[Math.floor(Math.random() * sides.length)];
+            results.push(result);
+            
+            // Create visual die
+            let dieDiv = document.createElement('div');
+            dieDiv.className = 'die';
+            dieDiv.innerText = result;
+            container.appendChild(dieDiv);
+        }
+
+        // Add to history
+        let timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        let logEntry = document.createElement('div');
+        logEntry.innerHTML = `<span style="color:#555">${timestamp}:</span> Rolled ${count} dice → <strong>${results.join(' ')}</strong>`;
+        history.prepend(logEntry);
+    }
 </script>
 
 </body>
