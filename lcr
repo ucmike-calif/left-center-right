@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCR Dice Roller</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: #1e1e1e; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .dice-display { font-size: 3.5rem; margin: 30px 0; min-height: 80px; display: flex; justify-content: center; gap: 15px; }
+        .die { background: white; color: black; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; }
+        button { background: #007aff; color: white; border: none; padding: 15px 30px; border-radius: 12px; font-size: 1.2rem; cursor: pointer; width: 100%; transition: 0.2s; }
+        button:active { transform: scale(0.98); background: #0056b3; }
+        #history { margin-top: 30px; text-align: left; font-size: 0.9rem; color: #aaa; height: 150px; overflow-y: auto; border-top: 1px solid #333; padding-top: 10px; }
+        .label { color: #007aff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>LCR Dice Roller</h2>
+    <p>Tap below to roll your turn</p>
+    
+    <div class="dice-display" id="dice-container">
+        <div class="die">?</div>
+    </div>
+    
+    <button onclick="startRoll()">Roll Dice</button>
+
+    <div id="history">
+        <div class="label">Roll History:</div>
+    </div>
+</div>
+
+<script>
+    const sides = ['L', 'C', 'R', '•', '•', '•'];
+
+    function startRoll() {
+        // Ask user how many dice
+        let input = prompt("How many dice do you need to roll? (1, 2, or 3)", "3");
+        let numDice = parseInt(input);
+
+        // Validation
+        if (isNaN(numDice) || numDice < 1 || numDice > 3) {
+            alert("Please enter 1, 2, or 3.");
+            return;
+        }
+
+        rollDice(numDice);
+    }
+
+    function rollDice(count) {
+        const container = document.getElementById('dice-container');
+        const history = document.getElementById('history');
+        container.innerHTML = '';
+        let results = [];
+
+        for (let i = 0; i < count; i++) {
+            let result = sides[Math.floor(Math.random() * sides.length)];
+            results.push(result);
+            
+            // Create visual die
+            let dieDiv = document.createElement('div');
+            dieDiv.className = 'die';
+            dieDiv.innerText = result;
+            container.appendChild(dieDiv);
+        }
+
+        // Add to history
+        let timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        let logEntry = document.createElement('div');
+        logEntry.innerHTML = `<span style="color:#555">${timestamp}:</span> Rolled ${count} dice → <strong>${results.join(' ')}</strong>`;
+        history.prepend(logEntry);
+    }
+</script>
+
+</body>
+</html>
